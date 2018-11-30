@@ -108,29 +108,46 @@ public class BinarySortTree<K extends Comparable, V> implements Tree<K, V> {
 
     @Override
     public V delete(K key) {
-        return deleteFromRoot(root, key);
+        return delete(root, true, key);
     }
 
-    private V deleteFromRoot(Node<K, V> tree, K key) {
+    private V delete(Node<K, V> tree, Boolean isRoot, K key) {
         //是空树
         if (tree == null) {
             return null;
         } else {
-            //如果根节点匹配上
+            //如果匹配上
             if (tree.getKey().equals(key)) {
                 //如果是叶子节点 直接删除
                 if (tree.getLchild() == null && tree.getLchild() == null) {
-                   root = null;
-                }else {
+                    //如果这个节点是根节点
+                    if (isRoot) {
+                        root = null;
+                    } else {
+                        //如果不是根节点，则找到他的父节点，将原本指向该节点的引用置为null
+                        ResetNode(tree, null);
+                    }
+                    return tree.getValue();
+                } else {
                     //仅有左子树的情况
-                    if(tree.getRchild() == null){
-                        root = tree.getLchild();
-                    }else{
+                    if (tree.getRchild() == null) {
+                        //如果是根节点
+                        if (isRoot) {
+                            root.setLchild(tree.getLchild());
+                        } else { //如果不是根节点，找出他的父节点，并替换掉父节点的相应孩子子节点
+                            ResetNode(tree, tree.getLchild());
+                        }
+                    } else {
                         //仅有右子树的情况
-                        if(tree.getLchild() == null){
-                            root = tree.getRchild();
-                        }else{ //左右子树都存在 那么找他的前继后者后继，这里找前继
-                          return null;
+                        if (tree.getLchild() == null) {
+                            if (isRoot) {
+                                root.setLchild(tree.getRchild());
+                            } else { //如果不是根节点，找出他的父节点，并替换掉父节点的相应孩子子节点
+                                ResetNode(tree, tree.getRchild());
+                            }
+
+                        } else { //左右子树都存在 那么找他的前继后者后继，这里找前继，将前继移至当前节点，并删除前继节点
+                            return null;
                         }
                     }
                 }
@@ -139,6 +156,76 @@ public class BinarySortTree<K extends Comparable, V> implements Tree<K, V> {
             }
         }
         return null;
+    }
+
+    /**
+     * replaceNode
+     *
+     * @param node      the node witch to replaced
+     * @param replaceNode new node
+     * @author liuruojing
+     * @since ${PROJECT_NAME} 0.1.0
+     */
+    private void ResetNode(Node<K, V> node, Node<K, V> replaceNode) {
+        Node<K, V> parentNode = findParentNode(root, node);
+        if (parentNode.getLchild() == node) {
+            parentNode.setLchild(replaceNode);
+        } else {
+            parentNode.setRchild(replaceNode);
+        }
+    }
+
+    /**
+     * 寻找某个节点的前继.
+     *
+     * @param
+     * @return
+     * @author liuruojing
+     * @since ${PROJECT_NAME} 0.1.0
+     */
+    public Node<K, V> findPredecessorNode(Node<K, V> node) {
+        if (node.getLchild() == null) {
+            return node;
+        } else {
+            return findPredecessorNode(node.getLchild());
+        }
+    }
+
+    /**
+     * 找到某个节点的父节点.
+     *
+     * @param parent root
+     * @param node   node
+     * @return the parent of node
+     * @author liuruojing
+     * @since ${PROJECT_NAME} 0.1.0
+     */
+    private Node<K, V> findParentNode(Node<K, V> parent, Node<K, V> node) {
+        if (parent == null || node == null) {
+            throw new IllegalArgumentException("illege argument");
+        } else {
+            if (parent.getLchild() == node || parent.getRchild() == node) {
+                return parent;
+            } else {
+                //如果只有右树
+                if (parent.getLchild() == null) {
+                    return findParentNode(parent.getRchild(), node);
+                } else {
+                    //如果只有左树
+                    if (parent.getRchild() == null) {
+                        return findParentNode(parent.getLchild(), node);
+                    } else {
+                        //如果两边都有子树，看看遍历哪边
+                        return parent.getKey().compareTo(node) > 0 ? findParentNode(parent.getLchild(), node) : findParentNode(parent.getRchild(), node);
+                    }
+
+                }
+
+
+            }
+        }
+
+
     }
 
     @Override
