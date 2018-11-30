@@ -118,50 +118,50 @@ public class BinarySortTree<K extends Comparable, V> implements Tree<K, V> {
         } else {
             //如果匹配上
             if (tree.getKey().equals(key)) {
-                //如果是叶子节点 直接删除
-                if (tree.getLchild() == null && tree.getLchild() == null) {
-                    //如果这个节点是根节点
+                //仅有左子树的情况或者右子树的情况或者是叶子节点的情况
+                if (tree.getRchild() == null || tree.getLchild() == null) {
+                    Node<K, V> childNode = tree.getRchild() == null ? tree.getLchild() : tree.getRchild();
+                    //如果是根节点
                     if (isRoot) {
-                        root = null;
-                    } else {
-                        //如果不是根节点，则找到他的父节点，将原本指向该节点的引用置为null
-                        ResetNode(tree, null);
+                        root = childNode;
+                    } else { //如果不是根节点，找出他的父节点，并替换掉父节点的相应孩子子节点
+                        ResetNode(tree, childNode);
                     }
-                    return tree.getValue();
                 } else {
-                    //仅有左子树的情况
-                    if (tree.getRchild() == null) {
-                        //如果是根节点
-                        if (isRoot) {
-                            root.setLchild(tree.getLchild());
-                        } else { //如果不是根节点，找出他的父节点，并替换掉父节点的相应孩子子节点
-                            ResetNode(tree, tree.getLchild());
-                        }
+                    //左右子树都存在 那么找他的前继或者后继，这里找前继，将前继移至当前节点，并删除前继节点
+                    Node<K, V> predecessorNode = findPredecessorNode(tree);
+                    //如果是根节点
+                    if (isRoot) {
+                        predecessorNode.setLchild(root.getLchild());
+                        predecessorNode.setRchild(root.getRchild());
+                        root = predecessorNode;
                     } else {
-                        //仅有右子树的情况
-                        if (tree.getLchild() == null) {
-                            if (isRoot) {
-                                root.setLchild(tree.getRchild());
-                            } else { //如果不是根节点，找出他的父节点，并替换掉父节点的相应孩子子节点
-                                ResetNode(tree, tree.getRchild());
-                            }
-
-                        } else { //左右子树都存在 那么找他的前继后者后继，这里找前继，将前继移至当前节点，并删除前继节点
-                            return null;
-                        }
+                        predecessorNode.setLchild(tree.getLchild());
+                        predecessorNode.setRchild(tree.getRchild());
+                        ResetNode(tree, predecessorNode);
                     }
+                    //删除前继节点
+                    ResetNode(predecessorNode, null);
                 }
-            } else {  //根节点没有匹配上则开始遍历子树
-                return null;
+                return tree.getValue();
+            } else {
+                //节点没有匹配上则开始遍历子树
+                if (tree.getKey().compareTo(key) > 0) {
+                    //遍历左子树
+                    return delete(tree.getLchild(), false, key);
+                } else {
+                    //遍历右子树
+                    return delete(tree.getRchild(), false, key);
+                }
             }
+
         }
-        return null;
     }
 
     /**
      * replaceNode
      *
-     * @param node      the node witch to replaced
+     * @param node        the node witch to replaced
      * @param replaceNode new node
      * @author liuruojing
      * @since ${PROJECT_NAME} 0.1.0
@@ -216,7 +216,7 @@ public class BinarySortTree<K extends Comparable, V> implements Tree<K, V> {
                         return findParentNode(parent.getLchild(), node);
                     } else {
                         //如果两边都有子树，看看遍历哪边
-                        return parent.getKey().compareTo(node) > 0 ? findParentNode(parent.getLchild(), node) : findParentNode(parent.getRchild(), node);
+                        return parent.getKey().compareTo(node.getKey()) > 0 ? findParentNode(parent.getLchild(), node) : findParentNode(parent.getRchild(), node);
                     }
 
                 }
@@ -247,19 +247,21 @@ public class BinarySortTree<K extends Comparable, V> implements Tree<K, V> {
         if (tree == null) {
             return null;
         } else {
-            StringBuilder str = new StringBuilder();
+            StringBuilder keyStr = new StringBuilder();
+            StringBuilder valueStr = new StringBuilder();
             Queue<Node<K, V>> queue = new LinkedList<>();
             queue.add(tree);
             while (!queue.isEmpty()) {
                 Node<K, V> currentNode = queue.poll();
                 if (currentNode != null) {
-                    str.append(currentNode.getValue().toString()).append(" ");
+                    keyStr.append(currentNode.getKey().toString()).append(" ");
+                    valueStr.append(currentNode.getValue().toString()).append(" ");
                     queue.add(currentNode.getLchild());
                     queue.add(currentNode.getRchild());
                 }
 
             }
-            return str.toString();
+            return "key:["+keyStr.toString()+"]   value:["+valueStr.toString()+"]";
         }
 
     }
