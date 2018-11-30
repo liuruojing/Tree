@@ -130,6 +130,8 @@ public class BinarySortTree<K extends Comparable, V> implements Tree<K, V> {
                 } else {
                     //左右子树都存在 那么找他的前继或者后继，这里找前继，将前继移至当前节点，并删除前继节点
                     Node<K, V> predecessorNode = findPredecessorNode(tree);
+                    //删除前继节点
+                    ResetNode(predecessorNode, null);
                     //如果是根节点
                     if (isRoot) {
                         predecessorNode.setLchild(root.getLchild());
@@ -140,8 +142,7 @@ public class BinarySortTree<K extends Comparable, V> implements Tree<K, V> {
                         predecessorNode.setRchild(tree.getRchild());
                         ResetNode(tree, predecessorNode);
                     }
-                    //删除前继节点
-                    ResetNode(predecessorNode, null);
+
                 }
                 return tree.getValue();
             } else {
