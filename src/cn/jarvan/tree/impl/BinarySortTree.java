@@ -192,7 +192,7 @@ public class BinarySortTree<K extends Comparable, V> implements Tree<K, V> {
      * @author liuruojing
      * @since ${PROJECT_NAME} 0.1.0
      */
-    public Node<K, V> findPredecessorNode(Node<K, V> node) {
+    private Node<K, V> findPredecessorNode(Node<K, V> node) {
         if (node.getLchild() == null) {
             return node;
         } else {
